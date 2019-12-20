@@ -36,14 +36,16 @@ $c->{repository_info}->{organisation} =
 
 $c->{repository_info}->{capability} =
 {
-        'oai-pmh-2.0' => 'supported',
-        'oai-pmh-2.0_url' => sub
+        'oai-pmh' => 'supported',
+	'oai-pmh_version' => '2.0',
+        'oai-pmh_url' => sub
         {
                 my ($repo) = @_;
                 my $url = $repo->config('perl_url') . '/oai2';
                 return $url;
         },
-        'sword-2.0' => 'supported'
+        'sword' => 'supported',
+	'sword_version' => '2.0',
 };
 
 
