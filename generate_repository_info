@@ -31,7 +31,8 @@ foreach my $category (@{$config->{categories}})
 		my $value = $category_data->{$key};
 		$value = &{$value}($repo) if ref $value eq 'CODE';
 		my $full_key = $category . '__' . $key;
-		push @{$pairs}, [$full_key, $value];
+
+		push @{$pairs}, [$full_key, $value] if defined $value;
 	}
 }
 

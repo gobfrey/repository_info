@@ -1,7 +1,17 @@
 $c->{repository_info_config} =
 {
 	'filename' => '_info.html',
-	'categories' => [ 'platform','organisation','capability','content']
+	'categories' => [ 'repository', 'platform','organisation','capability','content']
+};
+
+$c->{repository_info}->{repository} = 
+{
+	'name' => sub
+	{
+		my ($repo) = @_;
+		return $repo->phrase('archive_name')
+	}
+
 };
 
 $c->{repository_info}->{platform} =
@@ -13,16 +23,21 @@ $c->{repository_info}->{platform} =
 
 $c->{repository_info}->{organisation} =
 {
-        'name' => 'Organisation Name',
-        'url' => 'http://demo.ac.uk',
-        'department_name' => 'Department Name',
-        'department_url' => 'http://demo.ac.uk',
+        'name' => undef,
+        'url' => undef,
+	'contact_email' => sub
+	{
+		my ($repo) = @_;
+		return $repo->config('adminemail');
+	},
+        'department_name' => undef,
+        'department_url' => undef,
 };
 
 $c->{repository_info}->{capability} =
 {
-        'oai-pmh' => 'supported',
-        'oai-pmh_url' => sub
+        'oai-pmh-2.0' => 'supported',
+        'oai-pmh-2.0_url' => sub
         {
                 my ($repo) = @_;
                 my $url = $repo->config('perl_url') . '/oai2';
@@ -42,7 +57,7 @@ $c->{repository_info}->{content} = sub
 
 	return {} unless $ds;
 
-	$ds->map(sub
+	$ds->map($repo, sub
 	{
 		my ($repo, $ds, $dataobj, $counts) = @_;
 
