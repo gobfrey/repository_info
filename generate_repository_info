@@ -1,0 +1,127 @@
+#!/usr/bin/perl -w
+
+use FindBin;
+use lib "$FindBin::Bin/../perl_lib";
+
+use EPrints;
+
+use strict;
+use warnings;
+
+my ($repo_id) = @ARGV;
+die "generate_repository_info *repository_id*\n" unless $repo_id;
+
+my $repo = EPrints->new->repository($repo_id);
+die "Couldn't load repository $repo_id\n" unless $repo;
+
+my $config = $repo->config('repository_info_config');
+my $categories = $repo->config('repository_info');
+die "couldn't load configuration\n" unless $config;
+
+
+my $pairs = [];
+
+foreach my $category (@{$config->{categories}})
+{
+	my $category_data = $categories->{$category};
+	$category_data = &{$category_data}($repo) if ref $category_data eq 'CODE';
+
+	foreach my $key (sort keys %{$category_data})
+	{
+		my $value = $category_data->{$key};
+		$value = &{$value}($repo) if ref $value eq 'CODE';
+		my $full_key = $category . '__' . $key;
+		push @{$pairs}, [$full_key, $value];
+	}
+}
+
+
+my $html = '<html>
+<head>
+';
+
+$html .= pairs_as_meta_tags($repo, $pairs)->toString;
+
+$html .= '
+</head>
+<body>
+';
+
+$html .= pairs_as_table($repo, $pairs)->toString;
+
+$html .= '
+</body>
+</html>
+';
+
+
+foreach my $langid ( @{$repo->config( "languages" )} )
+{
+	my $target_file = $repo->config( "htdocs_path" );
+	$target_file .= "/$langid/";
+	$target_file .= $config->{filename};
+
+	open FILE, ">$target_file" or die "couldn't open $target_file for writing\n";
+	print FILE $html;
+	close FILE;
+}
+
+
+
+
+
+sub pairs_as_table
+{
+	my ($repo, $pairs) = @_;
+	my $xml = $repo->xml;
+
+	my $table = $xml->create_element('table');
+
+	foreach my $pair (@{$pairs})
+	{
+		$table->appendChild(table_row($repo, @{$pair}));
+	}
+
+	return $table;
+}
+
+sub pairs_as_meta_tags
+{
+	my ($repo, $pairs) = @_;
+
+	my $frag = $repo->xml->create_document_fragment;
+
+	foreach my $pair (@{$pairs})
+	{
+		$frag->appendChild(meta_tag($repo, @{$pair}));
+	}
+
+	return $frag;
+}
+
+sub table_row
+{
+	my ($repo, $name, $content) = @_;
+	my $xml = $repo->xml;
+
+	my $tr = $xml->create_element('tr');
+	my $td = $xml->create_element('td');
+	$tr->appendChild($td);
+	$td->appendChild($xml->create_text_node($name));
+
+	$td = $xml->create_element('td');
+	$tr->appendChild($td);
+	$td->appendChild($xml->create_text_node($content));
+
+	return $tr;
+}
+
+sub meta_tag
+{
+	my ($repo, $name, $content) = @_;
+
+	return $repo->xml->create_element('meta', name => $name, content => $content);
+}
+
+
+
