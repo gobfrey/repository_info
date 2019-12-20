@@ -1,0 +1,8 @@
+Automated Repository Information Page
+
+Installation
+
+Put the generate_repository_info script into the bin folder of your installation and the z_repository_info.pl file into your archive's cfg.d directory.
+Modify the z_repository_info file to contain appropriate organisation data
+
+run the generate_repository_info script
