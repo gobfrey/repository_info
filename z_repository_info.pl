@@ -13,10 +13,10 @@ $c->{repository_info}->{platform} =
 
 $c->{repository_info}->{organisation} =
 {
-        'name' => 'Jisc',
-        'url' => 'http://jisc.ac.uk',
-        'department_name' => 'Sherpa Services',
-        'department_url' => 'http://sherpa.ac.uk',
+        'name' => 'Organisation Name',
+        'url' => 'http://demo.ac.uk',
+        'department_name' => 'Department Name'
+        'department_url' => 'http://demo.ac.uk',
 };
 
 $c->{repository_info}->{capability} =
