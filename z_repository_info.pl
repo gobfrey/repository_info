@@ -1,7 +1,7 @@
 $c->{repository_info_config} =
 {
 	'filename' => '_info.html',
-	'categories' => [ 'repository', 'platform','organisation','capability','content']
+	'categories' => [ 'repository','platform','capability','content']
 };
 
 $c->{repository_info}->{repository} = 
@@ -12,7 +12,11 @@ $c->{repository_info}->{repository} =
 		return $repo->phrase('archive_name')
 	},
 	'description' => undef,
-
+	'contact-email' => sub
+	{
+		my ($repo) = @_;
+		return $repo->config('adminemail');
+	},
 };
 
 $c->{repository_info}->{platform} =
@@ -20,19 +24,6 @@ $c->{repository_info}->{platform} =
         'name' => 'EPrints',
         'version' => EPrints->human_version(),
         'url' => 'http://eprints.org'
-};
-
-$c->{repository_info}->{organisation} =
-{
-        'name' => undef,
-        'url' => undef,
-	'contact-email' => sub
-	{
-		my ($repo) = @_;
-		return $repo->config('adminemail');
-	},
-        'department_name' => undef,
-        'department_url' => undef,
 };
 
 $c->{repository_info}->{capability} =
