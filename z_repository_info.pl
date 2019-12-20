@@ -10,7 +10,8 @@ $c->{repository_info}->{repository} =
 	{
 		my ($repo) = @_;
 		return $repo->phrase('archive_name')
-	}
+	},
+	'description' => undef,
 
 };
 
