@@ -1,7 +1,7 @@
 $c->{repository_info_config} =
 {
 	'filename' => '_info.html',
-	'categories' => [ 'repository','platform','capability','content']
+	'categories' => [ 'repository','platform','capability','content', 'meta']
 };
 
 $c->{repository_info}->{repository} = 
@@ -92,5 +92,10 @@ $c->{repository_info}->{content} = sub
 	}, $counts);
 
 	return $counts;
+};
+
+$c->{repository_info}->{meta} =
+{
+	'datestamp' => EPrints::Time::iso_date(),
 };
 
