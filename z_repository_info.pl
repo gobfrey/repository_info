@@ -25,7 +25,7 @@ $c->{repository_info}->{organisation} =
 {
         'name' => undef,
         'url' => undef,
-	'contact_email' => sub
+	'contact-email' => sub
 	{
 		my ($repo) = @_;
 		return $repo->config('adminemail');
