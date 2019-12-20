@@ -36,24 +36,15 @@ foreach my $category (@{$config->{categories}})
 	}
 }
 
+my $xml = $repo->xml;
+my $html = $xml->create_element('html');
+my $head = $xml->create_element('head');
+my $body = $xml->create_element('body');
+$html->appendChild($head);
+$html->appendChild($body);
 
-my $html = '<html>
-<head>
-';
-
-$html .= pairs_as_meta_tags($repo, $pairs)->toString;
-
-$html .= '
-</head>
-<body>
-';
-
-$html .= pairs_as_table($repo, $pairs)->toString;
-
-$html .= '
-</body>
-</html>
-';
+$head->appendChild(pairs_as_meta_tags($repo, $pairs));
+$body->appendChild(pairs_as_table($repo, $pairs));
 
 
 foreach my $langid ( @{$repo->config( "languages" )} )
@@ -63,7 +54,7 @@ foreach my $langid ( @{$repo->config( "languages" )} )
 	$target_file .= $config->{filename};
 
 	open FILE, ">$target_file" or die "couldn't open $target_file for writing\n";
-	print FILE $html;
+	print FILE $html->toString(1);
 	close FILE;
 }
 
