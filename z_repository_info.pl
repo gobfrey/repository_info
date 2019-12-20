@@ -15,7 +15,7 @@ $c->{repository_info}->{organisation} =
 {
         'name' => 'Organisation Name',
         'url' => 'http://demo.ac.uk',
-        'department_name' => 'Department Name'
+        'department_name' => 'Department Name',
         'department_url' => 'http://demo.ac.uk',
 };
 
