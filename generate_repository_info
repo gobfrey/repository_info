@@ -18,60 +18,87 @@ my $config = $repo->config('repository_info_config');
 my $categories = $repo->config('repository_info');
 die "couldn't load configuration\n" unless $config;
 
+my $pairs = generate_pairs();
+my $page = generate_page($pairs);
+write_page($page);
 
-my $pairs = [];
 
-foreach my $category (@{$config->{categories}})
+sub generate_pairs
 {
-	my $category_data = $categories->{$category};
-	$category_data = &{$category_data}($repo) if ref $category_data eq 'CODE';
+	my $pairs = [];
 
-	foreach my $key (sort keys %{$category_data})
+	my $category_ids = $repo->config('repository_info_config','categories');
+	return $pairs unless $category_ids;
+
+	foreach my $category_id (@{$category_ids})
 	{
-		my $value = $category_data->{$key};
-		$value = &{$value}($repo) if ref $value eq 'CODE';
-		my $full_key = $category . '__' . $key;
+		my $category_data = $repo->config('repository_info',$category_id);
+		next unless $category_data;
 
-		push @{$pairs}, [$full_key, $value] if defined $value;
+		$category_data = &{$category_data}($repo) if ref $category_data eq 'CODE';
+
+		foreach my $key (sort keys %{$category_data})
+		{
+			my $value = $category_data->{$key};
+			$value = &{$value}($repo) if ref $value eq 'CODE';
+
+			my $full_key = $category_id . '__' . $key;
+
+			push @{$pairs}, [$full_key, $value] if defined $value;
+		}
+	}
+
+	return $pairs;
+}
+
+
+sub write_page
+{
+	my ($page) = @_;
+
+	foreach my $langid ( @{$repo->config( "languages" )} )
+	{
+		my $filename = $repo->config('repository_info_config','filename');
+		$filename = '_info.html' unless $filename;
+
+		my $target_file = $repo->config( "htdocs_path" );
+		$target_file .= "/$langid/";
+		$target_file .= $filename;
+
+		open FILE, ">$target_file" or die "couldn't open $target_file for writing\n";
+		print FILE $page->toString(1);
+		close FILE;
 	}
 }
 
-my $xml = $repo->xml;
-my $html = $xml->create_element('html');
-my $head = $xml->create_element('head');
-my $body = $xml->create_element('body');
-$html->appendChild($head);
-$html->appendChild($body);
 
-$head->appendChild(pairs_as_meta_tags($repo, $pairs));
-$body->appendChild(pairs_as_table($repo, $pairs));
-
-
-foreach my $langid ( @{$repo->config( "languages" )} )
+sub generate_page
 {
-	my $target_file = $repo->config( "htdocs_path" );
-	$target_file .= "/$langid/";
-	$target_file .= $config->{filename};
+	my ($pairs) = @_;
 
-	open FILE, ">$target_file" or die "couldn't open $target_file for writing\n";
-	print FILE $html->toString(1);
-	close FILE;
+	my $xml = $repo->xml;
+	my $html = $xml->create_element('html');
+	my $head = $xml->create_element('head');
+	my $body = $xml->create_element('body');
+	$html->appendChild($head);
+	$html->appendChild($body);
+
+	$head->appendChild(pairs_as_meta_tags($pairs));
+	$body->appendChild(pairs_as_table($pairs));
+	return $html;
 }
-
-
-
 
 
 sub pairs_as_table
 {
-	my ($repo, $pairs) = @_;
+	my ($pairs) = @_;
 	my $xml = $repo->xml;
 
 	my $table = $xml->create_element('table');
 
 	foreach my $pair (@{$pairs})
 	{
-		$table->appendChild(table_row($repo, @{$pair}));
+		$table->appendChild(table_row(@{$pair}));
 	}
 
 	return $table;
@@ -79,13 +106,13 @@ sub pairs_as_table
 
 sub pairs_as_meta_tags
 {
-	my ($repo, $pairs) = @_;
+	my ($pairs) = @_;
 
 	my $frag = $repo->xml->create_document_fragment;
 
 	foreach my $pair (@{$pairs})
 	{
-		$frag->appendChild(meta_tag($repo, @{$pair}));
+		$frag->appendChild(meta_tag(@{$pair}));
 	}
 
 	return $frag;
@@ -93,7 +120,7 @@ sub pairs_as_meta_tags
 
 sub table_row
 {
-	my ($repo, $name, $content) = @_;
+	my ($name, $content) = @_;
 	my $xml = $repo->xml;
 
 	my $tr = $xml->create_element('tr');
@@ -110,7 +137,7 @@ sub table_row
 
 sub meta_tag
 {
-	my ($repo, $name, $content) = @_;
+	my ($name, $content) = @_;
 
 	return $repo->xml->create_element('meta', name => $name, content => $content);
 }
