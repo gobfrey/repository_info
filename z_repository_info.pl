@@ -106,5 +106,6 @@ $c->{repository_info}->{content} = sub
 $c->{repository_info}->{meta} =
 {
 	'datestamp' => EPrints::Time::iso_date(),
+	'version' => '0.1.2', 
 };
 
