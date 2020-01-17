@@ -4,19 +4,27 @@ $c->{repository_info_config} =
 	'categories' => [ 'repository','platform','capability','content', 'meta']
 };
 
-$c->{repository_info}->{repository} = 
+$c->{repository_info}->{repository} = sub
 {
-	'name' => sub
+	my ($repo) = @_;
+
+	my $data = {};
+
+	$data->{'contact-email'} = $repo->config('adminemail');
+
+	my $languages = $repo->get_conf('languages');
+	$data->{'interface-languages'} = join(',', sort @{$languages});
+
+	foreach my $lang (sort @{$languages})
 	{
-		my ($repo) = @_;
-		return $repo->phrase('archive_name')
-	},
-	'description' => undef,
-	'contact-email' => sub
-	{
-		my ($repo) = @_;
-		return $repo->config('adminemail');
-	},
+		$repo->change_lang($lang);
+		if ($repo->get_lang->has_phrase('archive_name'))
+		{
+			$data->{'name_' . $lang} = $repo->phrase('archive_name');
+		}
+	}	
+	
+	return $data;
 };
 
 $c->{repository_info}->{platform} =
@@ -77,6 +85,7 @@ $c->{repository_info}->{content} = sub
 		my $type = $dataobj->value('type');
 		if ($type)
 		{
+			$type =~ s/_/-/g; #underscores are reserved
 			my $key_start = 'type-' . $type . '_count-';
 			push @{$keys}, $key_start . 'metadata';
 			push @{$keys}, $key_start . 'fulltext' if $fulltext;
