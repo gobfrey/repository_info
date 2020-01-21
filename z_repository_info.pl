@@ -66,7 +66,7 @@ $c->{repository_info}->{capability} =
         	}
 	],
         [['sword'],'supported'],
-	[['sword_version'] ,'2.0']
+	[['sword','version'] ,'2.0']
 ];
 
 $c->{repository_info}->{content} = sub
