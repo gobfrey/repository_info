@@ -1,3 +1,27 @@
+$c->{repository_info_add_pair} = sub
+{
+	my ($pairs, $tag, $value,) = @_;
+
+	return unless $value; #don't add empty values
+
+	push @{$pairs}, [$tag, $value];
+};
+
+$c->{repository_info_generate_tag} = sub
+{
+	my ($category, $item, $modifier) = @_;
+
+	foreach my $part ($category, $item, $modifier)
+	{
+		$part =~ s/_/-/g if $part;
+	}
+
+	my $tag = $category . '__' . $item;
+	$tag .= '_' . $modifier if $modifier;
+
+	return $tag;
+};
+
 $c->{repository_info_config} =
 {
 	'filename' => '_info.html',
@@ -6,58 +30,54 @@ $c->{repository_info_config} =
 
 $c->{repository_info}->{repository} = sub
 {
-	my ($repo) = @_;
+	my ($repo, $add_pair, $pairs) = @_;
 
-	my $data = {};
-
-	$data->{'contact-email'} = $repo->config('adminemail');
+	&{$add_pair}(['contact-email'], $repo->config('adminemail'));
 
 	my $languages = $repo->get_conf('languages');
-	$data->{'interface-languages'} = join(',', sort @{$languages});
+	&{$add_pair}(['interface-language','supported'],join(',', sort @{$languages}));
+	&{$add_pair}(['interface-language','default'], $repo->config('defaultlanguage'));
 
-	foreach my $lang (sort @{$languages})
+	foreach my $language_id (sort @{$languages})
 	{
-		$repo->change_lang($lang);
-		if ($repo->get_lang->has_phrase('archive_name'))
-		{
-			$data->{'name_' . $lang} = $repo->phrase('archive_name');
-		}
+		my $lang = $repo->get_language($language_id);
+		next unless $lang->has_phrase('archive_name');
+		&{$add_pair}(['name',$language_id],$lang->phrase('archive_name'));
 	}	
-	
-	return $data;
 };
 
 $c->{repository_info}->{platform} =
-{
-        'name' => 'EPrints',
-        'version' => EPrints->human_version(),
-        'url' => 'http://eprints.org'
-};
+[
+		[['name'],'EPrints'],
+		[['version'],EPrints->human_version()],
+		[['url'],'http://eprints.org']
+];
 
 $c->{repository_info}->{capability} =
-{
-        'oai-pmh' => 'supported',
-	'oai-pmh_version' => '2.0',
-        'oai-pmh_url' => sub
-        {
-                my ($repo) = @_;
-                my $url = $repo->config('perl_url') . '/oai2';
-                return $url;
-        },
-        'sword' => 'supported',
-	'sword_version' => '2.0',
-};
-
+[
+        [['oai-pmh'], 'supported'],
+	[['oai-pmh','version'], '2.0'],
+        [
+		['oai-pmh','url'],
+		sub {
+        	        my ($repo) = @_;
+        	        my $url = $repo->config('perl_url') . '/oai2';
+        	        return $url;
+        	}
+	],
+        [['sword'],'supported'],
+	[['sword_version'] ,'2.0']
+];
 
 $c->{repository_info}->{content} = sub
 {
-	my ($repo) = @_;
+	my ($repo, $add_pair) = @_;
+
+	my $ds = $repo->dataset('repository');
+
+	return unless $ds;
 
 	my $counts = {};
-
-	my $ds = $repo->dataset('archive');
-
-	return {} unless $ds;
 
 	$ds->map($repo, sub
 	{
@@ -76,36 +96,37 @@ $c->{repository_info}->{content} = sub
 			}
 		}
 
-
-		my $keys = [];
-		push @{$keys}, 'all_count-metadata';
-		push @{$keys}, 'all_count-fulltext' if $fulltext;
-		push @{$keys}, 'all_count-open-fulltext' if $open_fulltext;
+		$counts->{all}->{'count-metadata'}++;
+		$counts->{all}->{'count-fulltext'}++ if $fulltext;
+		$counts->{all}->{'count-open-fulltext'}++ if $open_fulltext;
 
 		my $type = $dataobj->value('type');
 		if ($type)
 		{
-			$type =~ s/_/-/g; #underscores are reserved
-			my $key_start = 'type-' . $type . '_count-';
-			push @{$keys}, $key_start . 'metadata';
-			push @{$keys}, $key_start . 'fulltext' if $fulltext;
-			push @{$keys}, $key_start . 'open-fulltext' if $open_fulltext;
+			$counts->{'type-'.$type}->{'count-metadata'}++;
+			$counts->{'type-'.$type}->{'count-fulltext'}++ if $fulltext;
+			$counts->{'type-'.$type}->{'count-open-fulltext'}++ if $open_fulltext;
 
-		}
-
-		foreach my $k (@{$keys})
-		{
-			$counts->{$k}++;
 		}
 
 	}, $counts);
 
-	return $counts;
+	foreach my $item (sort keys %{$counts})
+	{
+		foreach my $modifier ('count-metadata', 'count-fulltext','count-open-fulltext')
+		{
+			my $count = $counts->{$item}->{$modifier};
+			&{$add_pair}([$item,$modifier], ($count?$count:0));
+		}
+
+	}
+
+
 };
 
 $c->{repository_info}->{meta} =
-{
-	'datestamp' => EPrints::Time::iso_date(),
-	'version' => '0.1.2', 
-};
+[
+	[['datestamp'], EPrints::Time::iso_date()],
+	[['version'], '0.1.3']
+];
 

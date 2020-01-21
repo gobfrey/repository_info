@@ -35,17 +35,38 @@ sub generate_pairs
 		my $category_data = $repo->config('repository_info',$category_id);
 		next unless $category_data;
 
-		$category_data = &{$category_data}($repo) if ref $category_data eq 'CODE';
-
-		foreach my $key (sort keys %{$category_data})
+		my $add_pair_fn = sub
 		{
-			my $value = $category_data->{$key};
-			$value = &{$value}($repo) if ref $value eq 'CODE';
+			my ($item_modifier, $value) = @_;
+			my $item = $item_modifier->[0];
+			my $modifier = $item_modifier->[1];
 
-			my $full_key = $category_id . '__' . $key;
+			my $tag = $repo->call('repository_info_generate_tag', $category_id, $item, $modifier);
+			$repo->call('repository_info_add_pair', $pairs, $tag, $value); 
+		};
 
-			push @{$pairs}, [$full_key, $value] if defined $value;
+		if (ref $category_data eq 'CODE')
+		{
+			&{$category_data}($repo,$add_pair_fn);
 		}
+		elsif (ref $category_data eq 'ARRAY')
+		{
+			foreach my $pair (@{$category_data})
+			{
+				my $tag_parts = $pair->[0];
+				my $value = $pair->[1];
+				if (ref $value eq 'CODE')
+				{
+					&{$add_pair_fn}($tag_parts, &{$value}($repo));
+				}
+				else
+				{
+					&{$add_pair_fn}($tag_parts, $value);
+				}
+				
+			}
+		}
+
 	}
 
 	return $pairs;
