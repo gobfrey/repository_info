@@ -30,7 +30,7 @@ $c->{repository_info_config} =
 
 $c->{repository_info}->{repository} = sub
 {
-	my ($repo, $add_pair, $pairs) = @_;
+	my ($repo, $add_pair) = @_;
 
 	&{$add_pair}(['contact-email'], $repo->config('adminemail'));
 
