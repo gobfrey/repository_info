@@ -73,7 +73,7 @@ $c->{repository_info}->{content} = sub
 {
 	my ($repo, $add_pair) = @_;
 
-	my $ds = $repo->dataset('repository');
+	my $ds = $repo->dataset('archive');
 
 	return unless $ds;
 
