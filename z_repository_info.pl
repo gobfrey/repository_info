@@ -96,16 +96,16 @@ $c->{repository_info}->{content} = sub
 			}
 		}
 
-		$counts->{all}->{'count-metadata'}++;
-		$counts->{all}->{'count-fulltext'}++ if $fulltext;
-		$counts->{all}->{'count-open-fulltext'}++ if $open_fulltext;
+		$counts->{all}->{'count'}++;
+		$counts->{all}->{'count-with-files'}++ if $fulltext;
+		$counts->{all}->{'count-with-open-files'}++ if $open_fulltext;
 
 		my $type = $dataobj->value('type');
 		if ($type)
 		{
-			$counts->{'type-'.$type}->{'count-metadata'}++;
-			$counts->{'type-'.$type}->{'count-fulltext'}++ if $fulltext;
-			$counts->{'type-'.$type}->{'count-open-fulltext'}++ if $open_fulltext;
+			$counts->{'type-'.$type}->{'count'}++;
+			$counts->{'type-'.$type}->{'count-with-files'}++ if $fulltext;
+			$counts->{'type-'.$type}->{'count-with-open-files'}++ if $open_fulltext;
 
 		}
 
@@ -127,6 +127,6 @@ $c->{repository_info}->{content} = sub
 $c->{repository_info}->{meta} =
 [
 	[['datestamp'], EPrints::Time::iso_date()],
-	[['version'], '0.1.3']
+	[['version'], '0.1.4']
 ];
 
