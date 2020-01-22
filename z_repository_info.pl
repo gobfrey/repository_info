@@ -113,7 +113,7 @@ $c->{repository_info}->{content} = sub
 
 	foreach my $item (sort keys %{$counts})
 	{
-		foreach my $modifier ('count-metadata', 'count-fulltext','count-open-fulltext')
+		foreach my $modifier ('count', 'count-with-files','count-with-open-files')
 		{
 			my $count = $counts->{$item}->{$modifier};
 			&{$add_pair}([$item,$modifier], ($count?$count:0));
