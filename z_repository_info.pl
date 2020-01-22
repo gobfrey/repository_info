@@ -2,7 +2,7 @@ $c->{repository_info_add_pair} = sub
 {
 	my ($pairs, $tag, $value,) = @_;
 
-	return unless $value; #don't add empty values
+	return unless defined $value; #don't add empty values
 
 	push @{$pairs}, [$tag, $value];
 };
